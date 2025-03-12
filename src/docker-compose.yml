@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  midiot.api:
+    image: ${DOCKER_REGISTRY-}midiot.api
+    container_name: midiot.api
+    environment:
+        - ConnectionStrings__DefaultConnection=Host=midiot.postgres;Port=5432;Database=midiot;Username=postgres;Password=postgres; Include Error Detail=true
+        - JwtOptions__Issuer=Midiot.API
+        - JwtOptions__SecretKey=secret_key
+        - SendGridOptions__ApiKey=api_key
+        - SendGridOptions__FromEmail=from_email
+    build:
+      context: .
+      dockerfile: ./Midiot.API/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+       - midiot.postgres
+    
+  midiot.postgres:
+    image: postgres:latest
+    container_name: midiot.postgres
+    environment:
+     - POSTGRES_DB=midiot
+     - POSTGRES_USER=postgres
+     - POSTGRES_PASSWORD=postgres
+    volumes:
+     - pgdata:/var/lib/postgresql/data
+    ports:
+    - 5433:5432
+    
+  midiot.pgadmin:
+    container_name: midiot.pgadmin4
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@mail.xyz
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - 5050:80
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+    pgdata:
+    pgadmin-data:
