@@ -5,11 +5,11 @@ services:
     image: ${DOCKER_REGISTRY-}midiot.api
     container_name: midiot.api
     environment:
-        - ConnectionStrings__DefaultConnection=Host=midiot.postgres;Port=5432;Database=midiot;Username=postgres;Password=postgres; Include Error Detail=true
-        - JwtOptions__Issuer=Midiot.API
-        - JwtOptions__SecretKey=secret_key
-        - SendGridOptions__ApiKey=api_key
-        - SendGridOptions__FromEmail=from_email
+        ConnectionStrings__DefaultConnection: "${Db_Connect}"
+        JwtOptions__Issuer: Midiot.API
+        JwtOptions__SecretKey: "${JwtOptions__SecretKey}"
+        SendGridOptions__ApiKey: "${SendGridOptions__ApiKey}"
+        SendGridOptions__FromEmail: "${SendGridOptions__FromEmail}"
     build:
       context: .
       dockerfile: ./Midiot.API/Dockerfile
@@ -17,29 +17,40 @@ services:
       - "8080:8080"
     depends_on:
        - midiot.postgres
-    
+
   midiot.postgres:
     image: postgres:latest
     container_name: midiot.postgres
     environment:
-     - POSTGRES_DB=midiot
-     - POSTGRES_USER=postgres
-     - POSTGRES_PASSWORD=postgres
+        POSTGRES_DB: "${POSTGRES_DB}"
+        POSTGRES_USER: "${POSTGRES_USER}"
+        POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
      - pgdata:/var/lib/postgresql/data
     ports:
-    - 5433:5432
-    
+     - 5433:5432
+
   midiot.pgadmin:
-    container_name: midiot.pgadmin4
-    image: dpage/pgadmin4
+    container_name: midiot.pgadmin
+    image: 'docker.io/dpage/pgadmin4:latest'
     environment:
-      PGADMIN_DEFAULT_EMAIL: root@mail.xyz
-      PGADMIN_DEFAULT_PASSWORD: root
+        PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+        PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     ports:
       - 5050:80
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+
+  midiot.nginx:
+    image: nginx:latest
+    container_name: midiot.nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - midiot.api
 
 volumes:
     pgdata:
