@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            cd /mts.hack/src
+            cd mts.hack/src
             git pull origin main
             docker-compose down
-            docker-compose up -d
+            docker-compose up --build -d
